@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>字典修改</title>
+</head>
+<body>
+
+<input type="button" value="新增" onclick="addDict()">
+<hr>
+<div id="Dict"></div>
+<div id="addDict" hidden>
+    <label>字典类型：</label>&emsp;&ensp;
+    <input type="text" placeholder="请输入字典类型" id="addDT"><br>
+    <label for="addState">字典状态：</label>&emsp;&ensp;
+    <select id="addState">
+        <option value="启用">启用</option>
+        <option value="禁用">禁用</option>
+    </select><br>
+    <label for="addDict11">字典项值：</label>&ensp;
+    <input id="addDict11" type="image" style="width: 15px;" src="images/add.png" onclick="addDict1(0)">
+    <div id="addDictVal"></div>
+    <input type="button" value="确定" onclick="confirmAD(0)" id="confirmAD">&emsp;<input value="取消" type="button"
+                                                                                       onclick="cancelAD()">
+</div>
+<div id="DictModify" hidden>
+    <label>字典类型：</label>&emsp;&ensp;
+    <input type="text" placeholder="请输入字典类型" id="modifyDT"><br>
+    <label for="modifyState">字典状态：</label>&emsp;&ensp;
+    <select id="modifyState">
+        <option value="启用">启用</option>
+        <option value="禁用">禁用</option>
+    </select><br>
+    <label>字典项值：</label>&ensp;
+    <input id="modifyDict11" type="image" style="width: 15px;" src="images/add.png" onclick="modifyDict1(0)">
+    <div id="modifyDictVal"></div>
+    <input type="button" value="修改全部" onclick="confirmMD(0)" id="confirmMD">&emsp;<input value="关闭" type="button"
+                                                                                         onclick="cancelMD()">
+    <input type="hidden" id="hiddenID" value="">
+    <input type="hidden" id="num" value="">
+</div>
+
+<label id="test" onclick="test()">aaa</label>
+<select id="tests1">
+    <option value="1">111</option>
+    <option>222</option>
+</select>
+<script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+<script src="js/layer/layer.js"></script>
+<script>
+    function test() {
+        //alert($("#test").html())
+        //alert(document.getElementById("test").innerText)
+        alert($("#" + "tests" + 1).val())
+    }
+
+    $(function () {
+        $.ajax({
+            type: "get",
+            url: "/getSessionA",
+            success: function (result) {
+                $.ajax({
+                    type: 'get',
+                    url: '/checkPower',
+                    data: {account: result},
+                    success: function (msg) {
+                        if (msg[0].powerlevel !== "管理员") {
+                            alert("无权访问,请向管理员申请访问权");
+                            window.parent.location.href = "index.html";
+                            //window.location.href="login.html";
+                        } else {
+                            getDM();
+                        }
+                    }
+                })
+            }
+        })
+    });
+
+    function getDM() {
+        $.ajax({
+            type: 'get',
+            url: '/getDictM',
+            success: function (result) {
+                var html = "<table style='width: 70%;text-align: center;background-color: steelblue;'>";
+                html += "<tr><th>字典类型</th><th>字典状态</th><th>操作</th></tr>";
+                for (var i = 0; i < result.length; i++) {
+                    var obj = result[i];
+                    html += "<tr><td>"
+                        + obj.type_m
+                        + "</td><td>"
+                        + obj.state
+                        + "</td><td>"
+                        + "<input type='button' value='修改' onclick='modifyD("
+                        + obj.dictid
+                        + ")'>"
+                        + "<input type='button' value='删除' onclick='deleteD("
+                        + obj.dictid
+                        + ")'></td></tr>"
+                }
+                html += "</table>";
+                $("#Dict").append(html);
+            }
+        })
+    }
+
+    //新增
+    function addDict() {
+        layer.open({
+            type: 1,
+            title: '修改',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['32%', '60%'],
+            content: $('#addDict')
+        })
+    }
+
+    function addDict1(a) {
+        if (a < 9) {
+            var html = "<label>第" + (a + 1) + "个字典值：</label>" + "<input type='text' placeholder='提示：空数据无效' id='addDV" + (a + 1) + "'><br>";
+            $("#addDictVal").append(html);
+            $("#addDict11").attr("onclick", "addDict1(" + (a + 1) + ")");
+            $("#confirmAD").attr("onclick", "confirmAD(" + (a + 1) + ")")
+        }
+    }
+
+    function confirmAD(a) {
+        debugger;
+        var arr = new Array(a);
+        for (var i = 0; i < a; i++) {
+            var dict = $("#" + "addDV" + (i + 1)).val();
+            /*if (dict===""){
+                alert("空数据无效,不影响其它数据新增");
+            }*/
+            arr[i] = dict;
+        }
+        var addState = $("#addState").val();
+        var addDT = $("#addDT").val();
+        if (addDT === "") {
+            alert("字典类型不能为空")
+        } else {
+            $.ajax({
+                type: 'post',
+                url: '/addDict',
+                traditional: true,
+                data: {
+                    type_m: addDT,
+                    state: addState,
+                    list: arr
+                }, success: function () {
+                    alert("新增成功");
+                    window.location.reload();
+                }
+            })
+        }
+    }
+
+    function cancelAD() {
+        layer.closeAll()
+    }
+
+    //修改
+    function modifyD(dictid) {
+        if (dictid !== 0) {
+            $("#hiddenID").val(dictid);
+        }
+        //$("#DictModify").empty();
+        modifyD1();
+        layer.open({
+            type: 1,
+            title: '修改',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['35%', '60%'],
+            content: $('#DictModify')
+        })
+    }
+
+    function modifyD1() {
+        $("#modifyDictVal").empty();
+        var dictid = $("#hiddenID").val();
+        $.ajax({
+            type: 'get',
+            url: '/getToM',
+            data: {dictid: dictid},
+            success: function (result) {
+                $("#modifyDT").val(result[0].type_m);
+                $("#modifyState").val(result[0].state);
+                for (var i = 0; i < result.length; i++) {
+                    var obj = result[i];
+                    var html = "<label>第" + (i + 1) + "个字典值：</label>"
+                        + "<input type='text' placeholder='提示：空数据行默认删除' id='modify" + (i + 1) + "' value='" + obj.dict + "'>"
+                        /*+"<input type='button' onclick='modify1("+obj.did+")' value='修改'>"*/
+                        + "<input type='button' value='删除' onclick='delete1(" + obj.did + ")'>" + "<br>";
+                    $("#modifyDictVal").append(html);
+                    $("#modifyDict11").attr("onclick", "modifyDict1(" + (i + 1) + ")");
+                    $("#num").val(i);
+                }
+            }
+        })
+    }
+
+    function modifyDict1(a) {
+        if (a < 9) {
+            var html = "<label>第" + (a + 1) + "个字典值：</label>" + "<input type='text' placeholder='提示：空数据无效' id='modify" + (a + 1) + "'><br>";
+            $("#modifyDictVal").append(html);
+            $("#modifyDict11").attr("onclick", "modifyDict1(" + (a + 1) + ")");
+            //$("#confirmMD").attr("onclick","confirmAD("+(a+1)+")")
+        }
+    }
+
+    function confirmMD() {
+        var num = $("#num").val();
+        var arr1 = new Array(num);
+        var arr2 = new Array(9);
+        for (var i = 0; i < 9; i++) {
+            if (i <= num) {
+                var dict1 = $("#modify" + (i + 1)).val();
+                if (dict1 !== "") {
+                    arr1[i] = dict1;
+                } else {
+                    alert("空项请删除");
+                    return;
+                }
+            } else {
+                var dict2 = $("#modify" + (i + 1)).val();
+                if (dict2 !== "") {
+                    arr2[i + num] = dict2;
+                }/* else {
+                }*/
+            }
+        }
+        var dictid = $("#hiddenID").val();
+        var state = $("#modifyState").val();
+        var type_m = $("#modifyDT").val();
+        if (type_m === "") {
+            alert("字典类型不能为空");
+        } else {
+            modifyAll(arr1, arr2, dictid, state, type_m);
+        }
+    }
+
+    function modifyAll(a, b, c, d, e) {
+        $.ajax({
+            type: 'put',
+            url: '/modifyDict',
+            traditional: true,
+            //dataType:'json',
+            data: {
+                list: a,
+                array: b,
+                dictid: c,
+                state: d,
+                type_m: e
+            }, success: function () {
+                if (confirm("修改成功，是否关闭修改")) {
+                    window.location.reload();
+                } else {
+                    $("#Dict").empty();
+                    getDM();
+                    layer.closeAll();
+                    modifyD(0);
+                }
+            }
+        })
+    }
+
+    function delete1(did) {
+        if (confirm("是否删除此条字典")) {
+            $.ajax({
+                type: 'delete',
+                url: '/delOld',
+                data: {did: did},
+                success: function (result) {
+                    if (result === true) {
+                        alert("已删除");
+                        layer.closeAll();
+                        modifyD(0);
+                    }
+                }
+            })
+        }
+    }
+
+    function cancelMD() {
+        location.reload()
+    }
+
+    //删除
+    function deleteD(dictid) {
+        if (confirm("是否删除此字典项及其所有字典值？")) {
+            $.ajax({
+                type: 'delete',
+                url: '/deleteDM',
+                data: {dictid: dictid},
+                success: function (result) {
+                    alert("删除成功");
+                    $("#Dict").empty();
+                    getDM();
+                }
+            })
+        }
+    }
+</script>
+</body>
+</html>

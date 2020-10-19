@@ -1,0 +1,25 @@
+spring:
+  thymeleaf: #启动前台热部署
+    cache: false
+  jackson:
+    time-zone: GMT+8
+  devtools:
+    restart:
+      enabled: true #启动java热部署
+      additional-paths: src/main/java
+      exclude: /**
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://localhost:3306/crm?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  resources:
+    static-locations: classpath:/static/
+  mvc:
+    static-path-pattern: /**
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.crm.dao: debug

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CRM客户管理系统</title>
+    <style>
+        .name {
+            font-size: 30px;
+            color: deepskyblue;
+            border: none;
+            background-color: transparent;
+        }
+    </style>
+</head>
+<body>
+
+<input name="showName" type="button" id="showName" class="name" value=""><!--value="name"-->
+<input type="button" value="密码修改" id="modify" onclick="modify()">
+<input type="button" id="logout" value="注销" onclick="logout('')"><!--Cancellation-->
+<div id="modifyPassword" hidden style="text-align: center;float: top">
+    <input type="password" placeholder="输入当前密码" id="oldPwd" name="oldPwd">
+    <br/>
+    <input type="password" placeholder="输入新密码" id="newPwd1" name="newPwd1">
+    <br/>
+    <input type="password" placeholder="再次输入新密码" id="newPwd2" name="newPwd2">
+    <br/>
+    <input type="button" value="确定" id="confirm" onclick="Pconfirm()"><input type="button" value="取消" id="cancel"
+                                                                             onclick="Pcancel()">
+</div>
+<div style="display: flex">
+    <div style="display: inline-block;vertical-align: top" id="task">
+        <h2 style="color: gold;">&emsp;&nbsp;功能</h2>
+        <ul>
+            <li style="list-style-type: none">
+                <a href="javascript:void(0)" id="customer" style="text-decoration: none;color: deepskyblue;"
+                   onclick="Click(1)">客户管理</a>
+            </li>
+            <li style="list-style-type: none">
+                <a href="javascript:void(0)" id="contact" style="text-decoration: none;color: deepskyblue;"
+                   onclick="Click(2)">联系人管理</a>
+            </li>
+            <li style="list-style-type: none">
+                <a href="javascript:void(0)" id="visit" style="text-decoration: none;color: deepskyblue;"
+                   onclick="Click(3)">客户拜访管理</a>
+            </li>
+            <li style="list-style-type: none;display: none" id="dictPower">
+                <a href="javascript:void(0)" id="dict" style="text-decoration: none;color: red;" onclick="Click(4)">字典表管理</a>
+            </li>
+        </ul>
+    </div>
+    <div style="padding-left: 10%;" id="ICustomer">
+        <iframe src="" id="iframe" frameborder="0" width="60%" name="right"
+                style="min-width: 1100px;min-height: 600px"></iframe>
+    </div>
+</div>
+<script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+<script src="js/jquerysession.js"></script>
+<script src="js/layer/layer.js"></script>
+<script>
+    $(function () {
+        $.ajax({
+            type: "get",
+            url: "/getSessionA",
+            //dataType: "json",
+            success: function (result) {
+                //$("#Haccount").val(Saccount);
+                showName(result);
+                $.ajax({
+                    type: 'get',
+                    url: '/checkPower',
+                    data: {account: result},
+                    success: function (msg) {
+                        if (msg[0].powerlevel === "管理员") {
+                            $("#dictPower").show();
+                        }
+                    }
+                })
+            }
+        });
+    });
+
+    //展示name
+    function showName(account) {
+        $.ajax({
+            type: "get",
+            url: "/getName",
+            data: {account: account},
+            success: function (result) {
+                $("#showName").val(result);
+                /*if (result.status){
+                    alert("数据请求异常");
+                    logout(1)
+                }*/
+            }
+        })
+    }
+
+    //注销
+    function logout(i) {
+        $.ajax({
+            type: "get",
+            url: "/clearSession",
+            success: function () {
+                if (i == "") {
+                    if (confirm("是否注销")) {
+                        parent.window.location.href = "login.html"
+                    }
+                } else {
+                    parent.window.location.href = "login.html"
+                }
+            }
+        })
+    }
+
+    //密码修改
+    function modify() {
+        layer.open({
+            type: 1,
+            title: '密码修改',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'layui-layer-rim',
+            closeBtn: 1,
+            scrollbar: false,
+            area: ['30%', '20%'],
+            content: $('#modifyPassword')
+            //btn: ['确定','取消']
+        })
+    }
+
+    function Pconfirm() {
+        var Account;
+        var Pwd;
+        $.ajax({
+            type: "get",
+            url: "/getSessionA",
+            success: function (account) {
+                Account = account;
+                $.ajax({
+                    type: "get",
+                    url: "/getSessionP",
+                    success: function (password) {
+                        Pwd = password;
+                        p(Account, Pwd)
+                    }
+                })
+            }
+        })
+    }
+
+    //确定
+    function p(a, p) {
+        var Pwd = p;
+        var Account = a;
+        var NewPassword1 = $("input[name='newPwd1']").val();
+        var NewPassword2 = $("input[name='newPwd2']").val();
+        var oldPassword = $("input[name='oldPwd']").val();
+        // if(Pwd==""||Account==""){
+        //     window.parent.location.href="login.html"
+        // }else
+        if (oldPassword == "" || NewPassword1 == "" || NewPassword2 == "") {
+            alert("密码不能为空")
+        } else if (Pwd != oldPassword) {
+            alert("当前密码错误")
+        } else if (NewPassword1 != NewPassword2) {
+            alert("两次密码不一致！请重新输入");
+        } else {
+            update(Account, NewPassword1)
+        }
+    }
+
+    function update(a, p) {
+        $.ajax({
+            type: "post",
+            url: "/modify",
+            data: {
+                account: a,
+                password: p
+            },
+            success: function (result) {
+                alert("修改成功");
+                logout(1)
+            }
+        })
+    }
+
+    //取消
+    function Pcancel() {
+        $("#oldPwd").val("");
+        parent.layer.closeAll()
+    }
+
+    function Click(number) {
+        if (number === 1) {
+            $("#iframe").attr("src", "customer.html")
+        }
+        if (number === 2) {
+            $("#iframe").attr("src", "contact.html")
+        }
+        if (number === 3) {
+            $("#iframe").attr("src", "visit.html")
+        }
+        if (number === 4) {
+            $("#iframe").attr("src", "dict.html")
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/jquery.dialog.css"/>
+    <link rel="stylesheet" href="css/index.css"/>
+    <style>
+        .layui-layer-title {
+            background: url(images/righttitlebig.png) repeat-x;
+            font-weight: bold;
+            color: #46647e;
+            border: 1px solid #c1d3de;
+            height: 33px;
+            line-height: 33px;
+        }
+    </style>
+    <title>OA管理系统</title>
+</head>
+<body>
+<div>
+    <label for="sex">性别:</label>
+    <select id="sex">
+        <option></option>
+        <option>男</option>
+        <option>女</option>
+    </select>
+</div>
+<input value="aaa" type="button" onclick="f()">
+<script src="js/jquery-3.4.1.min.js"></script>
+<script>
+    function f() {
+        var i = $("#sex").val()
+        alert(i)
+    }
+</script>
+
+<!--<div class="changeDiv">
+    <a>性别:</a>
+    <input id="sex" type="text" list="sexlist">
+    <datalist id="sexlist">
+        <option>男</option>
+        <option>女</option>
+    </datalist>
+</div>-->
+
+
+<script>
+    $(function () {
+        toSomePage(1);
+    });
+
+    //每次调用此函数都发送一次请求，变量pn是默认开始页面
+
+    function toSomePage(pn) {
+        $.ajax({
+            url: ctx + "/SspShipVoyage/getSspShipTotalList",
+            type: "post",
+            data: "pn=" + pn,
+            success: function (result) {
+                build_user_table(result);//构建用户表格
+                build_pagination_info(result);//构建分页信息
+                build_pagination_nav(result)//构建分页导航
+            }
+        })
+    }
+
+    /**
+     创建一张用户表显示读取的数据
+     */
+
+    function build_user_table(result) {
+//先清空表格，不然会直接回追加到上次查询结果上
+        $("con").empty();
+//获取服务器返回的json数据
+        var users = result.pageInfo.list;
+        con = "";
+//$.each()是jquery的遍历方法
+        $.each(users, function (index, item) {
+// var date = new Date(parseInt(item.eta));
+// date.format("yyyy-MM-dd");
+// var ww= HdUtil.Date.prototype.format(item.eta);
+            var formatDate = format(item.eta, 'yyyy-MM-dd HH:mm:ss');
+            con += "<tr><td>" + item.cShipNam + "</td>";
+            con += "<td>" + item.iVoyage + "</td>";
+            con += "<td>" + item.shipMmsi + "</td>";
+            con += "<td>" + formatDate + "</td>";
+            con += "<td>" + item.cargoName + "</td>";
+            con += "<td>" + item.ton + "</td></tr>";
+        })
+        $("#con").html(con);
+    }
+
+    /**
+     创建分页信息
+     */
+    function build_pagination_info(result) {
+        $("#dataTableExample_info").empty();
+//得到服务器返回的jason数据里的分页信息，然后拼接
+        var pageNum = result.pageInfo.pageNum;
+        var pageSize = result.pageInfo.pages;
+        var total = result.pageInfo.total;
+//"当前"+pageNum+"页,共"+pages+"页,总"+total+"条记录"
+// $("#dataTableExample_info").append("第"+ pageNum+ "至"+ pageSize+" 项，共"+ total+" 项");
+        $("#dataTableExample_info").append("当前" + pageNum + "页,共" + pageSize + "页,总" + total + "条记录")
+    }
+
+
+    /**
+     创建分页导航条：
+     根据bootstrap文档里的分页说明，使用jquery创建元素。
+     */
+    function build_pagination_nav(result) {
+        $("#dataTableExample_paginate").empty();
+//首页
+        var fristPageLi = $("<li></li>").append($("<a></a>").attr("href", "javacript:void(0);").append("首页"));
+//前一页
+        var prePageLi = $("<li></li>").append($("<a></a>").attr("href", "javacript:void(0);").append($("<span></span>").append("&laquo;")));
+//如果没有前一页，就让按钮不能被点击,否则绑定点击事件，重新发送ajax请求，访问相应页面
+        if (result.pageInfo.hasPreviousPage == false) {
+            fristPageLi.addClass("disable");
+            prePageLi.addClass("disable");
+        } else {
+            fristPageLi.click(function () {
+                toSomePage(1);
+            });
+            prePageLi.click(function () {
+                toSomePage(result.pageInfo.pageNum - 1);
+            });
+        }
+        var ul = $("<ul class=\"pagination\" style=\"float: right\"></ul>").addClass("pagination").append(fristPageLi).append(prePageLi);
+        $.each(result.pageInfo.navigatepageNums, function (index, element) {
+            var numLi = $("<li></li>").append($("<a></a>").attr("href", "javacript:void(0);").append(element));
+//如果遍历的页码等于当前页面，就高亮显示，然后添加点击事件，如果有点击，就重新发送ajax请求，访问当前页面（pn=element）
+            if (result.pageInfo.pageNum == element) {
+                numLi.addClass("active");
+            }
+            numLi.click(function () {
+                toSomePage(element);
+            })
+            ul.append(numLi);
+        })
+//下一页
+        var nextPageLi = $("<li></li>").append($("<a></a>").attr("href", "javacript:void(0);").append($("<span></span>").append("&raquo;")));
+//末页
+        var lastPageLi = $("<li></li>").append($("<a></a>").attr("href", "javacript:void(0);").append("末页"));
+//如果没有后一页，就让按钮不能被点击,否则绑定点击事件，重新发送ajax请求，访问相应页面
+        if (result.pageInfo.hasNextPage == false) {
+            nextPageLi.addClass("disable");
+            lastPageLi.addClass("disable");
+        } else {
+            nextPageLi.click(function () {
+                toSomePage(result.pageInfo.pageNum + 1);
+            });
+            lastPageLi.click(function () {
+                toSomePage(result.pageInfo.pages);
+            });
+        }
+        ul.append(nextPageLi).append(lastPageLi);
+        $("<nav></nav>").append(ul).appendTo("#dataTableExample_paginate");
+    }
+</script>
+</body>
+</html>
+<!--<div class="dropdown custom1">
+        <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" id="level">
+            <em>客户级别</em>
+            <i class="caret"></i>
+        </button>
+        <ul class="dropdown-menu">
+            <li >
+                <input class="form-control seach_name" placeholder="请选择客户级别">
+                <i class="glyphicon glyphicon-search"></i>
+            </li>
+            <li><a>vip客户</a></li>
+            <li><a>普通设计</a></li>
+        </ul>
+    </div>
+    <div class="dropdown custom1">
+        <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" id="source">
+            <em>客户来源</em>
+            <i class="caret"></i>
+        </button>
+        <ul class="dropdown-menu">
+            <li >
+                <input class="form-control seach_name" placeholder="请选择客户来源">
+                <i class="glyphicon glyphicon-search"></i>
+            </li>
+            <li><a>推广活动</a></li>
+            <li><a>网络营销</a></li>
+            <li><a>电话营销</a></li>
+        </ul>
+    </div>
+    <div class="dropdown custom1">
+        <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" id="industry">
+            <em>所属行业</em>
+            <i class="caret"></i>
+        </button>
+        <ul class="dropdown-menu">
+            <li >
+                <input class="form-control seach_name" placeholder="请选择所属行业">
+                <i class="glyphicon glyphicon-search"></i>
+            </li>
+            <li><a>教育培训</a></li>
+            <li><a>电子商务</a></li>
+            <li><a>房地产</a></li>
+        </ul>
+    </div>-->
+/*$(function(){
+//new一个实例
+new DropdownSearch('.custom1');
+//new DropdownSearch('.custom2')
+//$("#modify").show();
+});*/
+<!--<script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    &lt;!&ndash;框架和图标样式&ndash;&gt;
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    &lt;!&ndash;下拉样式&ndash;&gt;
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            text-align: center;
+        }
+        table td, table th {
+            border: 1px solid #cad9ea;
+            color: #666;
+            height: 30px;
+        }
+        table thead th {
+            background-color: #CCE8EB;
+            width: 100px;
+        }
+        table tr:nth-child(odd) {
+            background: #fff;
+        }
+        table tr:nth-child(even) {
+            background: #F5FAFA;
+        }
+    </style>-->

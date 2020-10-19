@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>登录</title>
+    <link href="css/login.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+<div class="div_top">CRM客户关系管理系统</div>
+<div class="login">
+    <div class="message">请登录</div>
+    <div id="darkbannerwrap"></div>
+    <form method="post" id="myForm" action="">
+        <input name="action" value="login" type="hidden">
+        <input name="account" placeholder="账户" required="" type="text" id="account" onblur="blurss()">
+        <a readonly style="display: none" id="hook1">账号不存在</a>
+        <a readonly style="display: none" id="hook2">账号存在</a>
+        <a readonly style="display: none;color: red;" id="hook3">数据访问异常</a>
+        <hr class="hr15">
+        <input name="password" placeholder="密码" required="" type="password" id="password">
+        <!--<hr class="hr15">
+        <input name="name" placeholder="姓名" required="" type="text" id="name">-->
+        <hr class="hr15">
+        <input value="登录" style="width:45%;" type="button" id="login_btn" onclick="login()">&emsp;&emsp;<input
+            value="注册" style="width: 45%;" type="button" id="register_btn" onclick="register()">
+        <hr class="hr20">
+        <a onClick="alert('请联系管理员')">忘记密码</a>
+    </form>
+</div>
+
+<!--<div class="copyright">版权所有@<span style="color:#f77118">2017 </span>杭州天夏科技股份集团有限公司</div>-->
+<script type="text/javascript" src="js/jquery.js"></script>
+<script src="js/jquerysession.js"></script>
+<script src="js/layer/layer.js"></script>
+<script>
+    // 解决因退出系统或session过期，导致登录页嵌套在iframe中的问题
+    if (window.parent != window) {
+        window.parent.location.href = window.location.href
+    }
+
+    function blurss() {
+        var account = $("#account").val();
+        $.ajax({
+            type: "get",
+            url: "/getName",
+            //dataType: "json",
+            data: {account: account},
+            success: function (result) {
+                if (result == "") {
+                    $("#hook1").show();
+                    $("#hook2").hide();
+                    $("#hook3").hide()
+                }
+                if (result != "") {
+                    $("#hook1").hide();
+                    $("#hook2").show();
+                    $("#hook3").hide()
+                }/*else {
+                    $("#hook1").hide();
+                    $("#hook2").hide();
+                    $("#hook3").show()
+				}*/
+            }
+        })
+    }
+
+    function login() {
+        var sAccount = $("#account").val();
+        var sPassword = $("#password").val();
+        if(sAccount=='123' && sPassword=='123'){
+            sAccount=123;
+            sPassword=123
+            getUser(sAccount, sPassword);
+        }
+        if (sAccount == "" || sAccount.length <= 1) {
+            alert("用户名不能为空");
+            $("#account").focus();
+        } else if (sPassword == "" || sPassword.length < 1) {
+            alert("密码不能为空");
+            $("#password").focus();
+        } else {
+            getUser(sAccount, sPassword);
+        }
+
+    }
+
+    function getUser(account, password) {
+        //alert(account);
+        $.ajax({
+            type: "get",
+            url: "/login",
+            data: {account: account, password: password},
+            //dataType:"json",
+            success: function (result) {
+                if (result == "") {
+                    alert("密码错误")
+                } else {
+                    clearOldS(account, password);
+                }
+            }
+        });
+    }
+
+    function clearOldS(account, password) {
+        $.ajax({
+            type: "get",
+            url: "/clearSession",
+            success: function () {
+                saveSession(account, password);
+            },
+            error: function (result) {
+                console.log(result)
+            }
+        })
+    }
+
+    function saveSession(a, p) {
+        $.ajax({
+            type: "post",
+            url: "/session",
+            data: {account: a, password: p},
+            success: function () {
+                parent.window.location.href = "index.html"
+            }
+        });
+    }
+
+    function register() {
+        layer.open({
+            type: 2,
+            title: '注册',
+            shadeClose: true,
+            shade: 0.3,
+            //skin: 'layui-layer-rim',
+            closeBtn: 1,
+            area: ['50%', '70%'],
+            content: "register.html"
+        })
+    }
+
+</script>
+</body>
+</html>

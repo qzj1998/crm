@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>客户管理</title>
+
+</head>
+<body>
+<div class="box" style="display: none;margin: 0" id="addC">
+    <label for="custName">公司名称：</label>
+    <input type="text" placeholder="请输入客户名称" id="custName" style="width: 300px;height: 32px;margin-bottom: 20px">
+    <div>
+        <label for="level">客户级别：</label>
+        <select id="level">
+            <option>请选择</option>
+            <option>vip客户</option>
+            <option>普通客户</option>
+        </select>
+        &nbsp;
+        <label for="source">客户来源：</label>
+        <select id="source">
+            <option>请选择</option>
+            <option>推广活动</option>
+            <option>网络营销</option>
+            <option>电话营销</option>
+        </select>
+        &nbsp;
+        <label for="industry">所属行业：</label>
+        <select id="industry">
+            <option>请选择</option>
+            <option>教育培训</option>
+            <option>电子商务</option>
+            <option>房地产</option>
+        </select>
+    </div>
+    <br>
+    <label for="custPhone">固定电话：</label>
+    <input type="text" placeholder="请输入固定电话" id="custPhone" style="width: 300px;height: 32px;margin-bottom: 20px"
+           maxlength="11"><br>
+    <label for="custMP">移动电话：</label>
+    <input type="text" placeholder="请输入移动电话" id="custMP" style="width: 300px;height: 32px;margin-bottom: 20px"
+           maxlength="11">
+    <hr>
+    <input type="button" value="确定" onclick="CusConfirm()">&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="取消"
+                                                                                          onclick="CusCancel()">
+</div>
+<div class="box" style="display: none;margin: 0" id="modifyC">
+    <label for="mcname">公司名称：</label>
+    <input type="text" placeholder="请输入客户名称" id="mcname" style="width: 300px;height: 32px;margin-bottom: 20px">
+    <div>
+        <label for="mclevel">客户级别：</label>
+        <select id="mclevel">
+            <option>请选择</option>
+            <option>vip客户</option>
+            <option>普通客户</option>
+        </select>
+        &nbsp;
+        <label for="mcsource">客户来源：</label>
+        <select id="mcsource">
+            <option>请选择</option>
+            <option>推广活动</option>
+            <option>网络营销</option>
+            <option>电话营销</option>
+        </select>
+        &nbsp;
+        <label for="mcindustry">所属行业：</label>
+        <select id="mcindustry">
+            <option>请选择</option>
+            <option>教育培训</option>
+            <option>电子商务</option>
+            <option>房地产</option>
+        </select>
+    </div>
+    <br>
+    <label for="mcPhone">固定电话：</label>
+    <input type="text" placeholder="请输入固定电话" id="mcPhone" style="width: 300px;height: 32px;margin-bottom: 20px"
+           maxlength="11"><br>
+    <label for="mcMP">移动电话：</label>
+    <input type="text" placeholder="请输入移动电话" id="mcMP" style="width: 300px;height: 32px;margin-bottom: 20px"
+           maxlength="11">
+    <hr>
+    <input type="button" value="确定" onclick="mcConfirm()">&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="取消"
+                                                                                         onclick="mcCancel()">
+    <input type="hidden" value="" id="cidV">
+</div>
+<input type="text" placeholder="请输入客户名称" id="CN">
+<input type="button" onclick="searchByCN()" value="搜索">&emsp;
+<input type="button" onclick="addCust()" value="新增客户">
+<hr>
+<div id="searchResult" style="width: 100%"></div>
+<!--<div id="showCustomer"></div>-->
+<script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+<!--<script src="js/jquerysession.js"></script>-->
+<script src="js/layer/layer.js"></script>
+<script src="js/index.js"></script>
+<script>
+
+    $(function () {
+        searchByCN()
+    });
+
+    //新增客户
+    function addCust() {
+        layer.open({
+            type: 1,
+            title: '客户信息添加',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['50%', '60%'],
+            content: $('#addC')
+        })
+    }
+
+    function CusConfirm() {
+        var company = $("#custName").val();
+        $.ajax({
+            type: "post",
+            url: "/checkCompany",
+            data: {company: company},
+            success: function (result) {
+                if (result == "") {
+                    CusConfirm1(company)
+                } else {
+                    alert("客户已存在")
+                }
+            }
+        })
+    }
+
+    function CusConfirm1(company) {
+        // var company = $("#custName").val();
+        var level = $("#level").val();
+        var source = $("#source").val();
+        var industry = $("#industry").val();
+        var phone = $("#custPhone").val();
+        var mobile_phone = $("#custMP").val();
+        if (!/^[0-9]*$/.test(phone) || !/^[0-9]*$/.test(mobile_phone)) {
+            alert("电话号码为数字")
+        } else if (company == "") {
+            alert("公司不能为空")
+        } else if (level == "请选择") {
+            alert("请选择客户级别")
+        } else if (source == "请选择") {
+            alert("请选择客户来源")
+        } else if (industry == "请选择") {
+            alert("请选择所属行业")
+        } else if (industry == "请选择") {
+            alert("请选择所属行业")
+        } else if (phone == "") {
+            alert("请输入固定电话")
+        } else if (phone == "") {
+            alert("请输入移动电话")
+        } else {
+            insert(company, level, source, industry, phone, mobile_phone)
+        }
+    }
+
+    function insert(c, l, s, i, p, m) {
+        $.ajax({
+            type: "post",
+            url: "/addCustomer",
+            data: {
+                company: c,
+                level: l,
+                source: s,
+                industry: i,
+                phone: p,
+                mobile_phone: m
+            },
+            success: function (result) {
+                if (result != "") {
+                    alert("添加成功");
+                    window.location.reload()
+                }
+            }
+        })
+    }
+
+    function CusCancel() {
+        layer.closeAll()
+    }
+
+    //修改信息
+    function modifyCus(m) {
+        $.ajax({
+            type: "get",
+            url: "/selectC",
+            data: {cid: m},
+            success: function (result) {
+                $("#mcname").val(result[0].company);
+                $("#mclevel").val(result[0].level);
+                $("#mcsource").val(result[0].source);
+                $("#mcindustry").val(result[0].industry);
+                $("#mcPhone").val(result[0].phone);
+                $("#mcMP").val(result[0].mobile_phone);
+                $("#cidV").val(m);
+                modifyCustomer()
+            }
+        });
+    }
+
+    function modifyCustomer() {
+        layer.open({
+            type: 1,
+            title: '客户信息修改',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['50%', '60%'],
+            content: $('#modifyC')
+        })
+    }
+
+    function mcConfirm() {
+        var c = $("#mcname").val();
+        var l = $("#mclevel").val();
+        var s = $("#mcsource").val();
+        var i = $("#mcindustry").val();
+        var p = $("#mcPhone").val();
+        var m = $("#mcMP").val();
+        var cid = $("#cidV").val();
+        if (!/^[0-9]*$/.test(p) || !/^[0-9]*$/.test(m)) {
+            alert("电话号码为数字")
+        } else if (c == "") {
+            alert("公司不能为空")
+        } else if (l == "请选择") {
+            alert("请选择客户级别")
+        } else if (s == "请选择") {
+            alert("请选择客户来源")
+        } else if (i == "请选择") {
+            alert("请选择所属行业")
+        } else if (i == "请选择") {
+            alert("请选择所属行业")
+        } else if (p == "") {
+            alert("请输入固定电话")
+        } else if (m == "") {
+            alert("请输入移动电话")
+        } else {
+            updateC(c, l, s, i, p, m, cid)
+        }
+    }
+
+    function updateC(c, l, s, i, p, m, cid) {
+        $.ajax({
+            type: "put",
+            url: "/updateC",
+            data: {
+                company: c,
+                level: l,
+                source: s,
+                industry: i,
+                phone: p,
+                mobile_phone: m,
+                cid: cid
+            },
+            success: function (result) {
+                alert("修改成功");
+                $("#mcname").val(c);
+                $("#mclevel").val(l);
+                $("#mcsource").val(s);
+                $("#mcindustry").val(i);
+                $("#mcPhone").val(p);
+                $("#mcMP").val(m);
+                window.location.reload()
+            }
+        })
+    }
+
+    function mcCancel() {
+        layer.closeAll()
+    }
+
+    //删除
+    function deleteCus(d) {
+        if (confirm("是否删除客户信息")) {
+            deleteC(d)
+        }
+    }
+
+    function deleteC(d) {
+        $.ajax({
+            type: "delete",
+            url: "/deleteC",
+            data: {cid: d},
+            success: function (result) {
+                alert("删除成功");
+                window.location.reload()
+            }
+        })
+    }
+
+    //查询
+    function searchByCN() {
+        $("#searchResult").empty();
+        //$("#searchResult").empty();
+        var CN = $("#CN").val();
+        $.ajax({
+            type: "get",
+            url: "/search",
+            data: {company: CN},
+            success: function (result) {
+                var html = "";
+                html += "<table style='text-align: center;width: 100%;background-color: whitesmoke;border: 3px'>";
+                html += "<tr><th>客户名称</th><th>客户级别</th><th>客户来源</th><th>所属行业</th><th>电话</th><th>固定电话</th><th>移动电话</th></tr>";
+                for (var i = 0; i < result.length; i++) {
+                    //debugger;
+                    var obj = result[i];
+                    //console.log(obj);
+                    html += "<tr><td>"
+                        + obj.company
+                        + "</td><td>"
+                        + obj.level
+                        + "</td><td>"
+                        + obj.source
+                        + "</td><td>"
+                        + obj.industry
+                        + "</td><td>"
+                        + obj.phone
+                        + "</td><td>"
+                        + obj.mobile_phone
+                        + "</td><td>"
+                        + "<input type='button' value='修改' onclick='modifyCus("
+                        + obj.cid
+                        + ")'>&nbsp;"
+                        + "<input type='button' value='删除' onclick='deleteCus("
+                        + obj.cid
+                        + ")'>"
+                        + "</td></tr>"
+                }
+                html += "</table>";
+                $("#searchResult").append(html)
+            }
+        })
+    }
+</script>
+</body>
+</html>

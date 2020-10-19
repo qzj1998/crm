@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+    <link href="css/login.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+<div class="login" id="">
+    <input name="action" value="login" type="hidden">
+    <label for="account">账号：</label>
+    <input name="account" placeholder="请输入用户名" required="" type="text" id="account" onblur="blurs()">
+    <a type="image" readonly style="display: none;" id="hook1">正确</a>
+    <a type="image" readonly style="display: none;" id="hook2">账号已存在</a>
+    <hr class="hr15">
+    <label for="password">密码：</label>
+    <input name="password" placeholder="请输入密码" required="" type="password" id="password">
+    <hr class="hr15">
+    <label for="name">姓名：</label>
+    <input name="name" placeholder="请输入姓名" required="" type="text" id="name">
+    <hr class="hr20">
+    <input type="button" style="width:45%;" value="确认" onclick="confirm()">&nbsp;&nbsp;<input type="button"
+                                                                                              style="width:45%;"
+                                                                                              value="取消"
+                                                                                              onclick="cancel()">
+</div>
+
+<script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+<script src="js/layer/layer.js"></script>
+<script>
+    function blurs() {
+        var account = $("#account").val();
+        debugger;
+        $.ajax({
+            type: "get",
+            url: "/getName",
+            //dataType: "json",
+            data: {account: account},
+            success: function (result) {
+                if (result == "") {
+                    $("#hook1").show();
+                    $("#hook2").hide()
+                } else {
+                    $("#hook1").hide();
+                    $("#hook2").show()
+                }
+            }/*,error: function () {
+                alert("数据请求异常");
+                parent.layer.closeAll()
+            }*/
+        })
+    }
+
+    function confirm() {
+        var Raccount = $("#account").val();
+        var Rpassword = $("#password").val();
+        var Rname = $("#name").val();
+        if (Raccount == "" || Raccount.length <= 1) {
+            alert("用户名不能为空");
+            $("#account").focus();
+            return false;
+        }
+        if (Rpassword == "" || Rpassword.length < 1) {
+            alert("密码不能为空");
+            $("#password").focus();
+            return false;
+        }
+        if (Rname == "" || Rname.length < 1) {
+            alert("姓名不能为空");
+            $("#name").focus();
+            return false;
+        }
+        getData(Raccount, Rpassword, Rname);
+    }
+
+    function getData(a, p, n) {
+        $.ajax({
+            type: "get",
+            url: "/getName",
+            data: {account: a},
+            success: function (result) {
+                if (result != "") {
+                    alert('账号已存在')
+                } else {
+                    clearOldS(a, p, n);
+                }
+            }
+        });
+    }
+
+    function clearOldS(a, p, n) {
+        $.ajax({
+            type: "get",
+            url: "/clearSession",
+            success: function () {
+                sendData(a, p, n);
+            },
+            error: function () {
+                alert("bug")
+            }
+        })
+    }
+
+    function sendData(a, p, n) {
+        $.ajax({
+            type: "post",
+            url: "/register",
+            data: {account: a, password: p, username: n},
+            success: function (message) {
+                if (message) {
+                    goto(a, p);
+                }
+            }
+        })
+    }
+
+    function goto(a, p) {
+        $.ajax({
+            type: "post",
+            url: "/session",
+            data: {account: a, password: p},
+            success: function () {
+                parent.window.location.href = "index.html"
+            }
+        });
+    }
+
+    function cancel() {
+        parent.layer.closeAll()
+    }
+</script>
+</body>
+</html>

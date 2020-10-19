@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>联系人管理</title>
+</head>
+<body>
+<label for="ContactN">姓名：</label>
+<input type="text" id="ContactN" value="" placeholder="请输入联系人姓名">&emsp;
+
+<label for="sex">选择性别：</label>
+<select id="sex"></select>&emsp;
+<label>所属公司：</label>
+<input type="text" onclick="getCompany()" placeholder="选择所属公司" value="" id="company" readonly>
+<input type="button" value="搜索" onclick="searchContact()">&emsp;
+<input type="button" value="新增" onclick="addContact()">
+<hr>
+<div hidden id="addContact">
+    <label for="customer">所属客户：</label>
+    <select id="customer"></select><br>
+    <label for="contactName">姓名：</label>&emsp;&emsp;
+    <input type="text" value="" placeholder="请输入联系人姓名" id="contactName"><br>
+    <span id="sexChoose"></span><br>
+    <label for="office_phone">办公电话：</label>
+    <input type="text" id="office_phone" value="" placeholder="请输入办公电话" maxlength="11"><br>
+    <label for="cell_phone">手机：</label>&emsp;&emsp;
+    <input type="text" id="cell_phone" value="" placeholder="请输入手机" maxlength="11">
+    <hr>
+    <input type="button" value="确认" onclick="addConfirm()"><input type="button" value="取消" onclick="addCancel()">
+</div>
+<div id="modifyContact" hidden>
+    <input type="hidden" id="modifyId" value="">
+    <label for="modifyC">所属客户：</label>
+    <select id="modifyC"></select><br>
+    <label for="modifyN">姓名：</label>&emsp;&emsp;
+    <input type="text" value="" placeholder="请输入联系人姓名" id="modifyN"><br>
+    <span id="modifySex"></span><br>
+    <label for="modifyOff">办公电话：</label>
+    <input type="text" id="modifyOff" value="" placeholder="请输入办公电话" maxlength="11"><br>
+    <label for="modifyCel">手机：</label>&emsp;&emsp;
+    <input type="text" id="modifyCel" value="" placeholder="请输入手机" maxlength="11">
+    <hr>
+    <input type="button" value="确认" onclick="modifyConfirm()"><input type="button" value="取消" onclick="modifyCancel()">
+</div>
+<div id="contactResult" style="width: 100%;"></div>
+<div id="searchCompany" style="display: none">
+    <hr>
+    <input type="text" placeholder="输入搜索公司" value="" id="inputC">
+    <input type="button" onclick="chooseCompany()" value="查询">
+    <ul style="list-style: none;" id="getCompany"></ul>
+    <input value="确定" type="button" onclick="conConfirm()">&emsp;
+    <input value="取消" type="button" onclick="conCancel()">
+</div>
+
+<input type="button" onclick="test()" value="test">
+<input type="radio" checked="checked" name="aaa" value="nan">nan
+<input type="radio" checked="checked" name="aaa" value="nv">nv
+<script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+<script src="js/layer/layer.js"></script>
+<script>
+    function test() {
+        //var sex = $("input[name='aaa']:checked").val();
+        //$("input[name='aaa'][value='nv']").prop("checked",false)
+        $("input[name='aaa'][value='nv']").removeAttr("checked")
+    }
+
+    //进入查""列出所有信息&&查询
+    $(function selectAll() {
+        $("#ContactN").val("");
+        $("#sex").val("请选择");
+        $("#company").val("");
+        searchContact()
+    });
+    //下拉框公司
+    $(function () {
+        $.ajax({
+            type: "get",
+            url: "/getCompany",
+            data: {company: ""},
+            success: function (result) {
+                debugger;
+                var C = "";
+                C += "<option>请选择...</option>";
+                for (var i = 0; i < result.length; i++) {
+                    var obj = result[i];
+                    C += "<option>"
+                        + obj.company
+                        + "</option>"
+                }
+                //新增的公司下拉
+                $("#customer").append(C);
+                //修改的下拉
+                $("#modifyC").append(C)
+            }
+        })
+    });
+
+    function searchContact() {
+        $("#contactResult").empty();
+        //$("#searchResult").empty();
+        var ContactN = $("#ContactN").val();
+        var sex = $("#sex").val();
+        if (sex == "请选择") {
+            sex = ""
+        }
+        var company = $("#company").val();
+        $.ajax({
+            type: "get",
+            url: "/searchContact",
+            data: {name: ContactN, sex: sex, company: company},
+            success: function (result) {
+                var html = "";
+                html += "<table style='text-align: center;width: 100%;background-color: whitesmoke;border: 3px'>";
+                html += "<tr><th>联系人名称</th><th>性别</th><th>办公电话</th><th>手机</th><th>所属客户</th><th>操作</th></tr>";
+                for (var i = 0; i < result.length; i++) {
+                    //debugger;
+                    var obj = result[i];
+                    //console.log(obj);
+                    html += "<tr><td>"
+                        + obj.name
+                        + "</td><td>"
+                        + obj.sex
+                        + "</td><td>"
+                        + obj.office_phone
+                        + "</td><td>"
+                        + obj.cell_phone
+                        + "</td><td>"
+                        + obj.company
+                        //+ "</td><td>"
+                        //+ obj.mobile_phone
+                        + "</td><td>"
+                        + "<input type='button' value='修改' onclick='modifyContact("
+                        + obj.id
+                        + ")'>&nbsp;"
+                        + "<input type='button' value='删除' onclick='deleteContact("
+                        + obj.id
+                        + ")'>"
+                        + "</td></tr>"
+                }
+                html += "</table>";
+                $("#contactResult").append(html)
+            }
+        })
+    }
+
+    //新增
+    function addContact() {
+        layer.open({
+            type: 1,
+            title: '修改',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['40%', '35%'],
+            content: $('#addContact')
+        });
+    }
+
+    function addConfirm() {
+        debugger;
+        var company = $("#customer").val();
+        var contactName = $("#contactName").val();
+        var sex = $("input[name='sex']:checked").val();
+        var office_phone = $("#office_phone").val();
+        var cell_phone = $("#cell_phone").val();
+        if (sex == "") {
+            alert("性别不能为空")
+        } else if (company == "请选择...") {
+            alert("公司不能为空")
+        } else if (contactName == "") {
+            alert("姓名不能为空")
+        } else if (office_phone == "") {
+            alert("办公电话不能为空")
+        } else if (cell_phone == "") {
+            alert("手机不能为空")
+        } else {
+            addConfirm1(company, contactName, sex, office_phone, cell_phone)
+        }
+    }
+
+    function addConfirm1(com, con, sex, off, cel) {
+        //var company = $("#customer").val();
+        $.ajax({
+            type: "get",
+            url: "/getCid",
+            data: {company: com},
+            success: function (result) {
+                $.ajax({
+                    type: "post",
+                    url: "/addContact",
+                    data: {
+                        company: com,
+                        name: con,
+                        sex: sex,
+                        office_phone: off,
+                        cell_phone: cel,
+                        cid: result
+                    },
+                    success: function () {
+                        alert("成功");
+                        window.location.reload()
+                    }
+                })
+            }
+        })
+    }
+
+    function addCancel() {
+        layer.closeAll()
+    }
+
+    //修改
+    function modifyContact1() {
+        layer.open({
+            type: 1,
+            title: '修改',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['20%', '60%'],
+            content: $('#modifyContact')
+        })
+    }
+
+    function modifyContact(id) {
+        $('#modifyId').val(id);
+        debugger;
+        $.ajax({
+            type: 'get',
+            url: '/getAll',
+            data: {id: id},
+            success: function (result) {
+                $("#modifyC").val(result[0].company);
+                $("#modifyN").val(result[0].name);
+                $("#modifyOff").val(result[0].office_phone);
+                $("#modifyCel").val(result[0].cell_phone);
+                var ms = result[0].sex;
+                $("input:radio[name='ms']").removeAttr("checked");
+                if (ms == "男") {
+                    $("input:radio[name='ms'][value='男']").prop("checked", true);
+                }
+                if (ms == "女") {
+                    $("input:radio[name='ms'][value='女']").prop("checked", true);
+                }
+                modifyContact1();
+            }
+        })
+    }
+
+    function modifyConfirm() {
+        var id = $("#modifyId").val();
+        var company = $("#modifyC").val();
+        var contactName = $("#modifyN").val();
+        var sex = $("input[name='ms']:checked").val();
+        var office_phone = $("#modifyOff").val();
+        var cell_phone = $("#modifyCel").val();
+        if (sex == "") {
+            alert("性别不能为空")
+        } else if (company == "请选择...") {
+            alert("公司不能为空")
+        } else if (contactName == "") {
+            alert("姓名不能为空")
+        } else if (office_phone == "") {
+            alert("办公电话不能为空")
+        } else if (cell_phone == "") {
+            alert("手机不能为空")
+        } else {
+            modifyConfirm1(id, company, contactName, sex, office_phone, cell_phone)
+        }
+    }
+
+    function modifyConfirm1(id, company, contactName, sex, office_phone, cell_phone) {
+        $.ajax({
+            type: "get",
+            url: "/getCid",
+            data: {company: company},
+            success: function (cid) {
+                $.ajax({
+                    type: "put",
+                    url: "/modify",
+                    data: {
+                        name: contactName,
+                        sex: sex,
+                        office_phone: office_phone,
+                        cell_phone: cell_phone,
+                        cid: cid,
+                        id: id
+                    },
+                    success: function (result) {
+                        alert("修改成功");
+                        window.location.reload()
+                    }
+                })
+            }
+        })
+    }
+
+    function modifyCancel() {
+        layer.closeAll()
+    }
+
+    //删除
+    function deleteContact(id) {
+        if (confirm("是否删除此联系人信息？")) {
+            $.ajax({
+                type: "delete",
+                url: "/deleteById",
+                data: {id: id},
+                success: function () {
+                    alert("成功");
+                    window.location.reload()
+                }
+            })
+        }
+    }
+
+    //搜选文本框查询所属公司
+    function getCompany() {
+        layer.open({
+            type: 1,
+            title: '搜索所属公司',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['20%', '60%'],
+            content: $('#searchCompany')
+        });
+        chooseCompany();
+    }
+
+    function chooseCompany() {
+        $("#getCompany").empty();
+        var inputC = $("#inputC").val();
+        $.ajax({
+            type: "get",
+            url: "/getCompany",
+            data: {company: inputC},
+            success: function (result) {
+                var html = "";
+                for (var i = 0; i < result.length; i++) {
+                    var obj = result[i];
+                    html +=
+                        "<li><input type='radio' name='company' checked='checked' value='"
+                        + obj.company
+                        + "'>"
+                        + obj.company
+                        + "</li>"
+                }
+                $("#getCompany").append(html);
+                $("input:radio[name='company']").removeAttr("checked");
+            }
+        })
+    }
+
+    function conConfirm() {
+        var company = $("input[name='company']:checked").val();
+        $("#company").val(company);
+        layer.closeAll()
+    }
+
+    function conCancel() {
+        $("#company").val("");
+        layer.closeAll()
+    }
+
+    //字典值
+    $(function () {
+        $("#sex").empty();
+        $.ajax({
+            type: "get",
+            url: "/getSex",
+            success: function (result) {
+                var s = "";
+                var sex = "";
+                var modifys = "";
+                s += "<option>请选择</option>";
+                for (var i = 0; i < result.length; i++) {
+                    var obj = result[i];
+                    s += "<option>" + obj.dict + "</option>";
+
+                    sex += "<input type='radio' name='sex' checked='checked' value='"
+                        + obj.dict
+                        + "'>"
+                        + obj.dict
+                        + "";
+                    modifys += "<input type='radio' name='ms' checked='checked' value='"
+                        + obj.dict
+                        + "'>"
+                        + obj.dict
+                        + "";
+                }
+                $("#sex").append(s);
+                $("#sexChoose").append(sex);//新增的性别显示
+                $("#modifySex").append(modifys);//修改的
+                // $("input:radio[name='ms']").removeAttr("checked");
+                $("input:radio[name='sex']").removeAttr("checked");
+            }
+        })
+    })
+
+</script>
+</body>
+</html>

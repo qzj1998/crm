@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<label>时间：</label>
+<input type="date" id="date1" max="">&nbsp;<input type="time" id="time1" max="">>>>
+<input type="date" id="date2" min="">&nbsp;<input type="time" id="time2" min="">&ensp;
+<input type="button" value="搜索" onclick="searchVisit()">&emsp;&emsp;&emsp;&emsp;
+<input type="button" onclick="addV()" value="新增">
+<hr>
+<div id="searchVResult" style="width: 100%"></div>
+<div id="addV" hidden>
+    <label for="customerV">客户：</label>&emsp;&emsp;
+    <select id="customerV" onchange="clickC(1)"></select>&nbsp;
+    <input type="image" style="width: 15px;" src="images/refresh.png" onclick="a(1)"><br>
+    <label for="conNameV">联系人：</label>&emsp;
+    <select id="conNameV" onchange="clickN(1)"></select>&nbsp;
+    <input type="image" style="width: 15px;" src="images/refresh.png" onclick="b(1)"><br>
+    <label for="staffNameV">业务员：</label>&emsp;
+    <select id="staffNameV"></select><br>
+    <label for="timeAdd1">拜访时间：</label>
+    <input type="date" id="timeAdd1" value="" min="2019-11-01" max="2949-10-01">
+    <input type="time" id="timeAdd2" value="" min=""><br>
+    <label for="placeAdd">拜访地点：</label>
+    <input type="text" id="placeAdd" value="" placeholder="请输入拜访地点"><br>
+    <label for="detailsAdd">详细信息：</label>
+    <input type="text" id="detailsAdd" placeholder="请输入详细信息">
+    <hr>
+    <input type="button" value="确认" onclick="addConfirmV()"><input type="button" value="取消" onclick="addCancelV()">
+</div>
+<div id="modifyV" hidden>
+    <input type="hidden" id="vid" value="">
+    <label for="mvcustomer">客户：</label>&emsp;&emsp;
+    <select id="mvcustomer" onchange="clickC(2)"></select>&nbsp;
+    <input type="image" style="width: 15px;" src="images/refresh.png" onclick="a(2)"><br>
+    <label for="mvconName">联系人：</label>&emsp;
+    <select id="mvconName" onchange="clickN(2)"></select>&nbsp;
+    <input type="image" style="width: 15px;" src="images/refresh.png" onclick="b(2)"><br>
+    <label for="mvstaffName">业务员：</label>&emsp;
+    <select id="mvstaffName"></select>
+    <input type="image" style="width: 15px;" src="images/refresh.png" onclick="c(2)"><br>
+    <label for="timeM1">拜访时间：</label>
+    <input type="date" id="timeM1" value="" min="" max="3019-10-01">
+    <input type="time" id="timeM2" value=""><br>
+    <label for="placeM">拜访地点：</label>
+    <input type="text" id="placeM" value="" placeholder="请输入拜访地点"><br>
+    <label for="detailsAdd">详细信息：</label>
+    <input type="text" id="detailsM" placeholder="请输入详细信息">
+    <hr>
+    <input type="button" value="确认" onclick="modifyConfirmV()"><input type="button" value="取消"
+                                                                      onclick="modifyCancelV()">
+</div>
+<br>
+
+<select id="sel">
+    <option name="2">+dffd+</option>
+    <option value="1">1111</option>
+</select>
+<input type="button" onclick="f()" value="2112123">
+<script src="js/jquery-3.4.1.min.js"></script>
+<script src="js/layer/layer.js"></script>
+<script>
+    function f() {
+        /*var reDateTime = /^(?:19|20)[0-9][0-9]-(?:(?:0[1-9])|(?:1[0-2]))-(?:(?:[0-2][1-9])|(?:[1-3][0-1])) (?:(?:[0-2][0-3])|(?:[0-1][0-9])):[0-5][0-9]:[0-5][0-9]$/;
+        //var isDateTime = reDateTime.test('2012-01-31 09:00'+':22');
+        var test=  /^[1-9]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/;
+        var test2=/^(20|21|22|23|[0-1]\d):[0-5]\d$/;//:[0-5]\d*/
+
+    }
+
+    //列出所有（查最大时间段）
+    $(function () {
+        var a = "1949-10-01 00:00:00";
+        var b = "2949-10-01 00:00:00";
+        searchV(a, b)
+    });
+
+    //时间段搜索
+    function searchVisit() {
+        var date1 = $("#date1").val();
+        var time1 = $("#time1").val();
+        var date2 = $("#date2").val();
+        var time2 = $("#time2").val();
+        var result1 = date1 + " " + time1 + ":00";
+        var result2 = date2 + " " + time2 + ":00";
+        var test = /^(?:19|20)[0-9][0-9]-(?:(?:0[1-9])|(?:1[0-2]))-(?:(?:[0-2][1-9])|(?:[1-3][0-1])) (?:(?:[0-2][0-3])|(?:[0-1][0-9])):[0-5][0-9]:[0-5][0-9]$/;
+        if (test.test(result1) || test.test(result2)) {
+            if (result1 < result2) {
+                searchV(result1, result2)
+            } else {
+                searchV(result2, result1)
+            }
+        } else {
+            alert("请选择规范时间: xxxx-xx-xx xx:xx");
+        }
+    }
+
+    function searchV(min, max) {
+        debugger;
+        $("#searchVResult").empty();
+        $.ajax({
+            type: 'get',
+            url: '/searchV',
+            data: {
+                mintime: min,
+                maxtime: max
+            },
+            success: function (result) {
+                var html = "";
+                html += "<table style='text-align: center;width: 100%;background-color: whitesmoke;border: 3px'>";
+                html += "<tr><th>拜访时间</th><th>业务员名称</th><th>联系人</th><th>客户名称</th><th>拜访地点</th><th>拜访详情</th><th>操作</th></tr>";
+                for (var i = 0; i < result.length; i++) {
+                    var obj = result[i];
+                    var newtime = (obj.time).substring(0, 10) + " " + (obj.time).substring(11, 16);
+                    html += "<tr><td>"
+                        + newtime
+                        + "</td><td>"
+                        + obj.username
+                        + "</td><td>"
+                        + obj.name
+                        + "</td><td>"
+                        + obj.company
+                        + "</td><td>"
+                        + obj.place
+                        + "</td><td>"
+                        + obj.details
+                        + "</td><td>"
+                        + "<input type='button' value='修改' onclick='modifyVisit("
+                        + obj.vid
+                        + ")'>&nbsp;"
+                        + "<input type='button' value='删除' onclick='deleteVisit("
+                        + obj.vid
+                        + ")'>"
+                        + "</td></tr>"
+                }
+                html += "</table>";
+                $("#searchVResult").append(html);
+            }
+        })
+    }
+
+    //公司，联系人，业务员下拉
+    function a(v) {
+        $.ajax({
+            type: "get",
+            url: "/getCompanyV",
+            //data: {company:""},
+            success: function (result) {
+                debugger;
+                var C = "";
+                C += "<option>请选择...</option>";
+                for (var i = 0; i < result.length; i++) {
+                    var obj = result[i];
+                    C += "<option value='"
+                        + obj.cid
+                        + "'>"
+                        + obj.company
+                        + "</option>"
+                }
+                if (v === 1) {
+                    $("#customerV").empty();
+                    //新增访问的公司下拉
+                    $("#customerV").append(C);
+                }
+                if (v === 2) {
+                    $("#mvcustomer").empty();
+                    //修改访问的公司下拉
+                    $("#mvcustomer").append(C);
+                }
+            }
+        })
+    }
+
+    function b(v) {
+        $.ajax({
+            type: "get",
+            url: "/getContactN",
+            success: function (result2) {
+                var N = "";
+                N += "<option>请选择...</option>";
+                for (var i = 0; i < result2.length; i++) {
+                    var obj2 = result2[i];
+                    N += "<option value='"
+                        + obj2.id
+                        + "'>"
+                        + obj2.name
+                        + "</option>"
+                }
+                if (v === 1) {
+                    $("#conNameV").empty();
+                    $("#conNameV").append(N);
+                }
+                if (v === 2) {
+                    $("#mvconName").empty();
+                    $("#mvconName").append(N);
+                }
+            }
+        })
+    }
+
+    function c(v) {
+        $.ajax({
+            type: "get",
+            url: "/getSessionA",
+            //dataType: "json",
+            success: function (result) {
+                $.ajax({
+                    type: "get",
+                    url: "/getStaff",
+                    //data: {account:result},
+                    success: function (result2) {
+                        var S = "";
+                        for (var i = 0; i < result2.length; i++) {
+                            var obj = result2[i];
+                            if (obj.account == result) {
+                                S = "<option value='" + obj.userid + "'>" + obj.username + "</option>" + S
+                            } else {
+                                S += "<option value='" + obj.userid + "'>" + obj.username + "</option>"
+                            }
+                        }
+                        if (v === 2) {
+                            $("#mvstaffName").empty();
+                            $("#mvstaffName").append(S)
+                        }
+                        if (v === 1) {
+                            $("#staffNameV").empty();
+                            $("#staffNameV").append(S);
+                        }
+                    }
+                })
+            }
+        });
+    }
+
+    //公司和联系人关联
+    function clickC(v) {
+        $("#conNameV").empty();
+        $("#mvconName").empty();
+        var cid = v == 1 ? $("#customerV").val() : $("#mvcustomer").val();
+        $.ajax({
+            type: 'get',
+            url: '/checkCN',
+            data: {cid: cid, id: 0},
+            success: function (result) {
+                var N = "";
+                N += "<option>请选择...</option>";
+                for (var i = 0; i < result.length; i++) {
+                    var obj2 = result[i];
+                    N += "<option value='"
+                        + obj2.id
+                        + "'>"
+                        + obj2.name
+                        + "</option>"
+                }
+                if (v === 1) {
+                    $("#conNameV").append(N);
+                }
+                if (v === 2) {
+                    $("#mvconName").append(N)
+                }
+            }
+        })
+    }
+
+    function clickN(v) {
+        $("#customerV").empty();
+        $("#mvcustomer").empty();
+        var id = v == 1 ? $("#conNameV").val() : $("#mvconName").val();
+        $.ajax({
+            type: 'get',
+            url: '/checkCN',
+            data: {cid: 0, id: id},
+            success: function (result) {
+                var C = "<option value='" + result[0].cid + "'>" + result[0].company + "</option>>";
+                if (v === 1) {
+                    $("#customerV").append(C);
+                }
+                if (v === 2) {
+                    $("#mvcustomer").append(C);
+                }
+            }
+        })
+    }
+
+    //新增
+    function addV() {
+        a(1);
+        b(1);
+        c(1);
+        layer.open({
+            type: 1,
+            title: '新增',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['30%', '40%'],
+            content: $('#addV')
+        });
+    }
+
+    function addConfirmV() {
+        var cid = $("#customerV").val();
+        var id = $("#conNameV").val();
+        var userid = $("#staffNameV").val();
+        var time1 = $("#timeAdd1").val();
+        var time2 = $("#timeAdd2").val();
+        var time = time1 + " " + time2 + ":00";
+        var place = $("#placeAdd").val();
+        var details = $("#detailsAdd").val();
+        var reDateTime = /^(?:19|20)[0-9][0-9]-(?:(?:0[1-9])|(?:1[0-2]))-(?:(?:[0-2][1-9])|(?:[1-3][0-1])) (?:(?:[0-2][0-3])|(?:[0-1][0-9])):[0-5][0-9]:[0-5][0-9]$/;
+        if (cid == "" || id == "请选择...") {
+            alert("公司和联系人不能为空")
+        } else if (!reDateTime.test(time)) {
+            alert("请选择时间")
+        } else if (place == "") {
+            alert("地点不能为空")
+        } else if (details == "") {
+            alert("请填写详细信息")
+        } else {
+            addVisit(cid, id, userid, time, place, details)
+        }
+    }
+
+    function addVisit(cid, id, userid, time, place, details) {
+        $.ajax({
+            type: "post",
+            url: "/addVisit",
+            data: {
+                cid: cid,
+                id: id,
+                userid: userid,
+                time: time,
+                place: place,
+                details: details
+            },
+            success: function (result) {
+                if (result) {
+                    alert("添加成功");
+                    window.location.reload();
+                }
+            }
+        })
+    }
+
+    function addCancelV() {
+        layer.closeAll()
+    }
+
+    //修改
+    function modifyVisit(vid) {
+        modifyV1(vid);
+        layer.open({
+            type: 1,
+            title: '修改',
+            shadeClose: true,
+            shade: 0,
+            //skin: 'myskin',
+            closeBtn: 1,
+            area: ['30%', '40%'],
+            content: $('#modifyV')
+        });
+    }
+
+    function modifyV1(vid) {
+        $("#vid").val(vid);
+        $("#mvcustomer").empty();
+        $("#mvconName").empty();
+        $("#mvstaffName").empty();
+        debugger;
+        $.ajax({
+            type: "get",
+            url: "/getByVid",
+            data: {vid: vid},
+            success: function (result) {
+                var c = "<option value='" + result[0].cid + "'>" + result[0].company + "</option>";
+                $("#mvcustomer").append(c);
+                var n = "<option value='" + result[0].id + "'>" + result[0].name + "</option>";
+                $("#mvconName").append(n);
+                var u = "<option value='" + result[0].userid + "'>" + result[0].username + "</option>";
+                $("#mvstaffName").append(u);
+                var time = result[0].time;
+                var time1 = time.substring(0, 10);
+                var time2 = time.substring(11, 16);
+                $("#timeM1").val(time1);
+                $("#timeM2").val(time2);
+                $("#placeM").val(result[0].place);
+                $("#detailsM").val(result[0].details);
+            }
+        })
+    }
+
+    function modifyConfirmV() {
+        var vid = $("#vid").val();
+        var time = $("#timeM1").val() + " " + $("#timeM2").val() + ":00";
+        var place = $("#placeM").val();
+        var details = $("#detailsM").val();
+        var id = $("#mvconName").val();
+        var userid = $("#mvstaffName").val();
+        var cid = $("#mvcustomer").val();
+        var test = /^(?:19|20)[0-9][0-9]-(?:(?:0[1-9])|(?:1[0-2]))-(?:(?:[0-2][1-9])|(?:[1-3][0-1])) (?:(?:[0-2][0-3])|(?:[0-1][0-9])):[0-5][0-9]:[0-5][0-9]$/;
+        if (cid == "请选择..." || id == "请选择...") {
+            alert("公司和联系人不能为空")
+        } else if (!test.test(time)) {
+            alert("时间格式不正确")
+        } else if (place == "") {
+            alert("地点不能为空")
+        } else if (id == "" || cid == "" || userid == "") {
+            alert("不能为空")
+        } else {
+            modifyV(vid, time, place, details, id, userid, cid);
+        }
+    }
+
+    function modifyV(vid, time, place, details, id, userid, cid) {
+        $.ajax({
+            type: 'put',
+            url: '/modifyV',
+            data: {
+                time: time,
+                place: place,
+                details: details,
+                id: id,
+                cid: cid,
+                userid: userid,
+                vid: vid
+            },
+            success: function (result) {
+                alert("修改成功");
+                window.location.reload();
+            }
+        })
+    }
+
+    function modifyCancelV() {
+        layer.closeAll();
+    }
+
+    //删除
+    function deleteVisit(vid) {
+        if (confirm("是否删除此访问事件")) {
+            $.ajax({
+                type: 'delete',
+                url: '/delByVid',
+                data: {vid: vid},
+                success: function (result) {
+                    window.location.reload();
+                }
+            })
+        }
+    }
+</script>
+
+</body>
+</html>
